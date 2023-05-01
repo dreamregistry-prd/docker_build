@@ -1,5 +1,5 @@
 terraform {
-  backend "s3" {}
+  #  backend "s3" {}
   required_providers {
     archive = {
       source  = "hashicorp/archive"
@@ -8,6 +8,10 @@ terraform {
     aws = {
       source  = "registry.terraform.io/hashicorp/aws"
       version = "~> 4.0"
+    }
+    random = {
+      source  = "registry.terraform.io/hashicorp/random"
+      version = "~> 3.4"
     }
   }
 }
@@ -18,11 +22,12 @@ provider "aws" {
   region = "us-east-1"
   alias  = "us-east-1"
 }
+provider "random" {}
 
 locals {
   image_name     = var.image_name != null ? var.image_name : basename(var.dream_project_dir)
   source_dir     = var.dream_project_dir
-  source_dest    = "${local.image_name}/${var.image_tag}.zip"
+  source_dest    = "${local.image_name}/${var.image_tags[0]}"
   repository_url = var.is_public_image ? aws_ecrpublic_repository.public.0.repository_uri : aws_ecr_repository.private.0.repository_url
   ecr_url        = dirname(local.repository_url)
 }
@@ -62,7 +67,7 @@ data "archive_file" "project_source" {
   source {
     content = templatefile("${path.module}/buildspec.yml", {
       imageName     = local.image_name
-      imageTag      = var.image_tag
+      imageTags     = join(" ", [for tag in var.image_tags : "\"${tag}\""])
       builder       = var.builder
       awsRegion     = var.is_public_image ? "us-east-1" : data.aws_region.current.name
       ecrUrl        = local.ecr_url
@@ -74,9 +79,16 @@ data "archive_file" "project_source" {
   output_path = ".source.zip"
 }
 
+resource "random_pet" "project_source_s3_name" {
+  keepers = {
+    source_hash = data.archive_file.project_source.output_base64sha256
+  }
+  length = 2
+}
+
 resource "aws_s3_object" "project_source" {
   bucket = var.source_bucket
-  key    = local.source_dest
+  key    = "${local.source_dest}/${random_pet.project_source_s3_name.id}.zip"
   source = data.archive_file.project_source.output_path
   etag   = data.archive_file.project_source.output_base64sha256
 }
@@ -95,7 +107,7 @@ data "aws_iam_policy_document" "codebuild_assume_role" {
 }
 
 resource "aws_iam_role" "docker_build" {
-  name               = "AWSCodeBuild-docker-${local.image_name}-${var.image_tag}"
+  name               = "AWSCodeBuild-docker-${local.image_name}"
   assume_role_policy = data.aws_iam_policy_document.codebuild_assume_role.json
 }
 
@@ -151,7 +163,7 @@ resource "aws_iam_role_policy" "example" {
 }
 
 resource "aws_codebuild_project" "docker_build" {
-  name         = "docker-${local.image_name}-${var.image_tag}"
+  name         = "docker-${local.image_name}"
   description  = "Builds the ${local.image_name} docker image"
   service_role = aws_iam_role.docker_build.arn
 
@@ -168,13 +180,13 @@ resource "aws_codebuild_project" "docker_build" {
 
   source {
     type     = "S3"
-    location = "${var.source_bucket}/${local.source_dest}"
+    location = "${var.source_bucket}/${local.source_dest}/${random_pet.project_source_s3_name.id}.zip"
   }
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "codebuild-${local.image_name}-${var.image_tag}-build"
-      stream_name = "codebuild-${local.image_name}-${var.image_tag}-log-stream"
+      group_name  = "codebuild-${local.image_name}-build"
+      stream_name = "codebuild-${local.image_name}-log-stream"
     }
   }
 }
@@ -192,5 +204,7 @@ resource "terraform_data" "build" {
 }
 
 output "DOCKER_IMAGE" {
-  value = "${local.repository_url}:${var.image_tag}"
+  value = [
+    for tag in var.image_tags : "${local.repository_url}:${tag}"
+  ]
 }

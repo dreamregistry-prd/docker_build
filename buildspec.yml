@@ -1,5 +1,8 @@
 version: 0.2
 
+env:
+  shell: bash
+
 phases:
   install:
     commands:
@@ -14,10 +17,16 @@ phases:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - pack build ${imageName}:${imageTag} --path . --builder ${builder}
-      - docker tag ${imageName}:${imageTag} ${ecrUrl}/${imageName}:${imageTag}
+      - pack build ${imageName}:latest --path . --builder ${builder}
+      - imageTags=(${imageTags}) && for tag in "$${imageTags[@]}";
+        do
+          docker tag ${imageName}:latest ${ecrUrl}/${imageName}:$tag;
+        done
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
-      - docker push ${ecrUrl}/${imageName}:${imageTag}
+      - imageTags=(${imageTags}) && for tag in "$${imageTags[@]}";
+        do
+          docker push ${ecrUrl}/${imageName}:$tag;
+        done

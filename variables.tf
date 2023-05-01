@@ -15,10 +15,10 @@ variable "image_name" {
   default     = null
 }
 
-variable "image_tag" {
+variable "image_tags" {
   description = "tag of the docker image to build"
-  type        = string
-  default     = "latest"
+  type        = list(string)
+  default     = ["latest", "v1"]
 }
 
 variable "builder" {
