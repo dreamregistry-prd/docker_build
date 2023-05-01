@@ -1,5 +1,5 @@
 terraform {
-  #  backend "s3" {}
+  backend "s3" {}
   required_providers {
     archive = {
       source  = "hashicorp/archive"
@@ -203,7 +203,7 @@ resource "terraform_data" "build" {
   }
 }
 
-output "DOCKER_IMAGE" {
+output "DOCKER_IMAGES" {
   value = [
     for tag in var.image_tags : "${local.repository_url}:${tag}"
   ]
