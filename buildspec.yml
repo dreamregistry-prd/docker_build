@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - add-apt-repository ppa:cncf-buildpacks/pack-cli
+      - apt-get update -y
+      - apt-get install -y pack-cli
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ${ecrSubCommand} get-login-password --region ${awsRegion} | docker login --username AWS --password-stdin ${ecrUrl}
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - pack build ${imageName}:${imageTag} --path . --builder ${builder}
+      - docker tag ${imageName}:${imageTag} ${ecrUrl}/${imageName}:${imageTag}
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker image...
+      - docker push ${ecrUrl}/${imageName}:${imageTag}
