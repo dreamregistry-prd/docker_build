@@ -24,7 +24,7 @@ variable "image_tag" {
 variable "builder" {
   description = "buildpack builder to use to build the docker image"
   type        = string
-  default     = "heroku/builder:22"
+  default     = "gcr.io/buildpacks/builder:v1"
 }
 
 variable "source_bucket" {
