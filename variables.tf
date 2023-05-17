@@ -32,7 +32,7 @@ variable "image_tags" {
 variable "builder" {
   description = "buildpack builder to use to build the docker image"
   type        = string
-  default     = "gcr.io/buildpacks/builder:v1"
+  default     = "heroku/builder:22"
 }
 
 variable "is_public_image" {
