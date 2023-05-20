@@ -44,6 +44,6 @@ variable "is_public_image" {
 variable "force_delete_repository" {
   description = "If true, the ECR repository will be deleted on destroy even if it contains images"
   type        = bool
-  default     = false
+  default     = true
 }
 
