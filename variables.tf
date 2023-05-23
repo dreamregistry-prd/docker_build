@@ -30,7 +30,7 @@ variable "image_tags" {
 }
 
 variable "builder" {
-  description = "buildpack builder to use to build the docker image"
+  description = "buildpack builder to use to build the docker image. Ignored if build_with_docker is true"
   type        = string
   default     = "heroku/builder:22"
 }
@@ -46,4 +46,11 @@ variable "force_delete_repository" {
   type        = bool
   default     = true
 }
+
+variable "build_with_docker" {
+  description = "If true, the docker image will be built with docker instead of buildpacks"
+  type        = bool
+  default     = false
+}
+
 
