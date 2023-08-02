@@ -15,7 +15,7 @@ provider "aws" {
 }
 
 module "docker_build" {
-  source    = "github.com/hereya/terraform-modules//docker-build/module?ref=v0.19.0"
+  source    = "github.com/hereya/terraform-modules//docker-build/module?ref=v0.30.0"
   providers = {
     aws.us-east-1 = aws.us-east-1
   }
@@ -28,6 +28,8 @@ module "docker_build" {
   force_delete_repository = var.force_delete_repository
   codecommit_password_key = var.codecommit_password_key
   codecommit_username     = var.codecommit_username
+  dockerhub_password      = var.dockerhub_password
+  dockerhub_username      = var.dockerhub_username
 }
 
 output "DOCKER_IMAGES" {

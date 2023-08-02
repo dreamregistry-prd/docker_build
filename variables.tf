@@ -17,6 +17,15 @@ variable "codecommit_username" {
   description = "The username to use when authenticating to CodeCommit"
 }
 
+variable "dockerhub_username" {
+  description = "The username to use when authenticating to the docker registry"
+}
+
+variable "dockerhub_password" {
+  description = "The password to use when authenticating to the docker registry"
+}
+
+
 variable "image_name" {
   description = "name of the docker image to build without the namespace. Uses the project dir name by default"
   type        = string
@@ -52,5 +61,4 @@ variable "build_with_docker" {
   type        = bool
   default     = false
 }
-
 
