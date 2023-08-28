@@ -22,6 +22,7 @@ variable "dockerhub_username" {
 }
 
 variable "dockerhub_password" {
+  sensitive   = true
   description = "The password to use when authenticating to the docker registry"
 }
 
